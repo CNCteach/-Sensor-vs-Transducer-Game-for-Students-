@@ -1,0 +1,652 @@
+import React, { useState, useEffect } from 'react';
+import { Award, Zap, CheckCircle, XCircle, RotateCcw, Trophy } from 'lucide-react';
+
+const SensorTransducerGame = () => {
+  const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [gameComplete, setGameComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showMiniCelebration, setShowMiniCelebration] = useState(false);
+  const [showSadFace, setShowSadFace] = useState(false);
+
+  const questions = [
+    // Easy Questions (1-5)
+    {
+      device: "Mercury Thermometer",
+      description: "Mercury expands and rises in a glass tube when heated",
+      converts: "Heat → Thermal expansion (visual reading)",
+      answer: "sensor",
+      explanation: "It DETECTS temperature through thermal expansion but only provides a visual indication - no energy conversion to another form!",
+      difficulty: "Easy"
+    },
+    {
+      device: "Thermocouple",
+      description: "Two dissimilar metal wires joined together that produce voltage when heated",
+      converts: "Heat → Electrical voltage (millivolts)",
+      answer: "transducer",
+      explanation: "It CONVERTS thermal energy directly into electrical voltage through the Seebeck effect - classic energy transformation!",
+      difficulty: "Easy"
+    },
+    {
+      device: "Microphone",
+      description: "Diaphragm vibrates from sound waves and generates electrical signals",
+      converts: "Sound waves (pressure variations) → Electrical signal",
+      answer: "transducer",
+      explanation: "It CONVERTS acoustic energy (sound pressure) into electrical energy - energy transformation occurs!",
+      difficulty: "Easy"
+    },
+    {
+      device: "Bimetallic Strip Thermostat",
+      description: "Two bonded metals with different expansion rates bend when heated",
+      converts: "Temperature → Mechanical bending motion",
+      answer: "sensor",
+      explanation: "It DETECTS temperature through differential thermal expansion causing bending, but stays as mechanical motion!",
+      difficulty: "Easy"
+    },
+    {
+      device: "Photoresistor (LDR)",
+      description: "Semiconductor material whose resistance decreases when light hits it",
+      converts: "Light photons → Electrical resistance change",
+      answer: "transducer",
+      explanation: "It CONVERTS light energy into a change in electrical resistance through photoconductive effect!",
+      difficulty: "Easy"
+    },
+    
+    // Medium Questions (6-13)
+    {
+      device: "Bourdon Tube Pressure Gauge",
+      description: "Curved metal tube straightens under pressure and moves a pointer on a dial",
+      converts: "Fluid pressure → Mechanical displacement (visual pointer)",
+      answer: "sensor",
+      explanation: "It SENSES pressure through mechanical deformation but only displays it mechanically - no energy type conversion!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Strain Gauge",
+      description: "Fine wire grid on flexible backing changes resistance when stretched",
+      converts: "Mechanical strain (tension/compression) → Resistance change",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical deformation into electrical resistance change through the piezoresistive effect!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Piezoelectric Pressure Sensor",
+      description: "Quartz crystal generates voltage when compressed or stretched",
+      converts: "Mechanical pressure (compressive force) → Electrical voltage",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical stress directly into electrical charge through the piezoelectric effect!",
+      difficulty: "Medium"
+    },
+    {
+      device: "RTD (Resistance Temperature Detector)",
+      description: "Pure platinum wire whose resistance increases predictably with temperature",
+      converts: "Temperature → Electrical resistance change",
+      answer: "transducer",
+      explanation: "It CONVERTS thermal energy into a measurable change in electrical resistance!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Mechanical Pressure Switch",
+      description: "Spring-loaded diaphragm that opens or closes electrical contacts at set pressure",
+      converts: "Fluid pressure → Contact closure (on/off signal)",
+      answer: "sensor",
+      explanation: "It DETECTS pressure and triggers a switch, but the mechanism is primarily mechanical sensing - it's a sensor that makes/breaks a circuit!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Hall Effect Sensor",
+      description: "Semiconductor that produces voltage perpendicular to magnetic field and current",
+      converts: "Magnetic flux density → Voltage output",
+      answer: "transducer",
+      explanation: "It CONVERTS magnetic field strength into electrical voltage through the Hall effect!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Float Switch",
+      description: "Buoyant float rises and falls with liquid level, actuating a switch mechanism",
+      converts: "Liquid level (buoyancy force) → Mechanical switch position",
+      answer: "sensor",
+      explanation: "It SENSES liquid level through buoyancy but uses mechanical switching - it detects position mechanically!",
+      difficulty: "Medium"
+    },
+    {
+      device: "Load Cell",
+      description: "Metal structure with strain gauges that deform under weight",
+      converts: "Compressive/tensile force (weight) → Electrical signal",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical force into electrical signals through embedded strain gauges - force to electricity!",
+      difficulty: "Medium"
+    },
+    
+    // Hard Questions (14-20)
+    {
+      device: "LVDT (Linear Variable Differential Transformer)",
+      description: "Movable magnetic core between coils changes mutual inductance",
+      converts: "Linear displacement (position) → AC voltage amplitude",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical position into variable AC voltage through electromagnetic induction - position to electrical!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Capacitive Proximity Sensor",
+      description: "Detects changes in capacitance when objects enter its electrostatic field",
+      converts: "Object proximity (dielectric change) → Capacitance change → Digital output",
+      answer: "transducer",
+      explanation: "It CONVERTS physical proximity into capacitance change, then to electrical signal - energy transformation occurs!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Bi-Metal Thermometer with Dial",
+      description: "Coiled bimetallic strip rotates a pointer across a calibrated scale",
+      converts: "Temperature → Rotational mechanical motion (visual)",
+      answer: "sensor",
+      explanation: "It DETECTS temperature through mechanical rotation but remains mechanical output - no energy type conversion!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Potentiometric Position Sensor",
+      description: "Sliding contact on resistive element creates variable voltage divider",
+      converts: "Linear/rotary position → Variable voltage output",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical position into proportional voltage through resistive division - position to electrical!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Thermistor",
+      description: "Semiconductor ceramic with temperature-dependent resistance (NTC or PTC)",
+      converts: "Temperature → Nonlinear resistance change",
+      answer: "transducer",
+      explanation: "It CONVERTS thermal energy into electrical resistance change through semiconductor properties!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Manometer",
+      description: "U-shaped tube with liquid that shows pressure difference by height",
+      converts: "Pressure differential → Liquid column height (visual)",
+      answer: "sensor",
+      explanation: "It SENSES pressure through hydrostatic principles but only shows mechanical displacement - no energy conversion!",
+      difficulty: "Hard"
+    },
+    {
+      device: "Accelerometer (MEMS)",
+      description: "Microscopic proof mass suspended on springs with capacitive sensing plates",
+      converts: "Acceleration (inertial force) → Capacitance change → Voltage",
+      answer: "transducer",
+      explanation: "It CONVERTS mechanical acceleration into electrical signal through micro-electro-mechanical capacitance changes!",
+      difficulty: "Hard"
+    }
+  ];
+
+  const MiniConfetti = () => {
+    const confettiPieces = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      animationDelay: Math.random() * 0.5,
+      backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'][Math.floor(Math.random() * 6)]
+    }));
+
+    return (
+      <div className="fixed inset-0 pointer-events-none z-50">
+        {confettiPieces.map((piece) => (
+          <div
+            key={piece.id}
+            className="absolute w-2 h-2 animate-mini-confetti"
+            style={{
+              left: `${piece.left}%`,
+              top: '-10px',
+              backgroundColor: piece.backgroundColor,
+              animationDelay: `${piece.animationDelay}s`,
+              animationDuration: '2s'
+            }}
+          />
+        ))}
+        <style jsx>{`
+          @keyframes mini-confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+          }
+          .animate-mini-confetti {
+            animation: mini-confetti linear forwards;
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  const Confetti = () => {
+    const confettiPieces = Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      animationDelay: Math.random() * 3,
+      backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'][Math.floor(Math.random() * 6)]
+    }));
+
+    return (
+      <div className="fixed inset-0 pointer-events-none z-50">
+        {confettiPieces.map((piece) => (
+          <div
+            key={piece.id}
+            className="absolute w-3 h-3 animate-confetti"
+            style={{
+              left: `${piece.left}%`,
+              top: '-10px',
+              backgroundColor: piece.backgroundColor,
+              animationDelay: `${piece.animationDelay}s`,
+              animationDuration: '4s'
+            }}
+          />
+        ))}
+        <style jsx>{`
+          @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+          }
+          .animate-confetti {
+            animation: confetti linear forwards;
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  const MiniBalloons = () => {
+    const balloons = Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      left: 10 + (i * 10),
+      animationDelay: i * 0.1,
+      color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'][i % 6]
+    }));
+
+    return (
+      <div className="fixed inset-0 pointer-events-none z-40">
+        {balloons.map((balloon) => (
+          <div
+            key={balloon.id}
+            className="absolute bottom-0 animate-mini-balloon"
+            style={{
+              left: `${balloon.left}%`,
+              animationDelay: `${balloon.animationDelay}s`
+            }}
+          >
+            <div 
+              className="w-8 h-10 rounded-full relative"
+              style={{ backgroundColor: balloon.color }}
+            >
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-6 bg-gray-400" />
+            </div>
+          </div>
+        ))}
+        <style jsx>{`
+          @keyframes mini-balloon {
+            0% { transform: translateY(0) translateX(0); opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(${Math.random() * 20 - 10}px); opacity: 0; }
+          }
+          .animate-mini-balloon {
+            animation: mini-balloon 3s ease-in forwards;
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  const Balloons = () => {
+    const balloons = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      left: 5 + (i * 6),
+      animationDelay: i * 0.2,
+      color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'][i % 6]
+    }));
+
+    return (
+      <div className="fixed inset-0 pointer-events-none z-40">
+        {balloons.map((balloon) => (
+          <div
+            key={balloon.id}
+            className="absolute bottom-0 animate-balloon"
+            style={{
+              left: `${balloon.left}%`,
+              animationDelay: `${balloon.animationDelay}s`
+            }}
+          >
+            <div 
+              className="w-12 h-16 rounded-full relative"
+              style={{ backgroundColor: balloon.color }}
+            >
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-gray-400" />
+            </div>
+          </div>
+        ))}
+        <style jsx>{`
+          @keyframes balloon {
+            0% { transform: translateY(0) translateX(0); opacity: 1; }
+            100% { transform: translateY(-120vh) translateX(${Math.random() * 40 - 20}px); opacity: 0; }
+          }
+          .animate-balloon {
+            animation: balloon 6s ease-in forwards;
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (showCelebration) {
+      // Play celebration sound (whistle sound)
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const playWhistle = (frequency, startTime, duration) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      // Create whistle sound pattern
+      const now = audioContext.currentTime;
+      playWhistle(800, now, 0.1);
+      playWhistle(1200, now + 0.15, 0.15);
+      playWhistle(1000, now + 0.35, 0.1);
+      playWhistle(1400, now + 0.5, 0.2);
+    }
+  }, [showCelebration]);
+
+  const playCorrectSound = () => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Cheerful whistle sound
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    const now = audioContext.currentTime;
+    
+    // Create a cheerful ascending whistle
+    oscillator.frequency.setValueAtTime(800, now);
+    oscillator.frequency.linearRampToValueAtTime(1200, now + 0.1);
+    oscillator.frequency.linearRampToValueAtTime(1000, now + 0.2);
+    
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    
+    oscillator.start(now);
+    oscillator.stop(now + 0.3);
+  };
+
+  const playWrongSound = () => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Low moaning/disappointed sound
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sawtooth';
+    const now = audioContext.currentTime;
+    
+    // Create a descending moan sound
+    oscillator.frequency.setValueAtTime(300, now);
+    oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.5);
+    
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    
+    oscillator.start(now);
+    oscillator.stop(now + 0.5);
+  };
+
+  const handleAnswer = (answer) => {
+    const correct = answer === questions[currentQuestion].answer;
+    setIsCorrect(correct);
+    setShowFeedback(true);
+    
+    if (correct) {
+      setScore(score + 10 + (streak * 5));
+      setStreak(streak + 1);
+      setShowMiniCelebration(true);
+      playCorrectSound();
+      setTimeout(() => setShowMiniCelebration(false), 2000);
+    } else {
+      setStreak(0);
+      setShowSadFace(true);
+      playWrongSound();
+      setTimeout(() => setShowSadFace(false), 2000);
+    }
+  };
+
+  const handleContinue = () => {
+    setShowFeedback(false);
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setGameComplete(true);
+      // Check for perfect score
+      if (score === questions.length * 10) {
+        setShowCelebration(true);
+      }
+    }
+  };
+
+  const resetGame = () => {
+    setScore(0);
+    setCurrentQuestion(0);
+    setShowFeedback(false);
+    setIsCorrect(false);
+    setGameComplete(false);
+    setStreak(0);
+    setShowCelebration(false);
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch(difficulty) {
+      case 'Easy': return 'bg-green-100 text-green-700';
+      case 'Medium': return 'bg-yellow-100 text-yellow-700';
+      case 'Hard': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  if (gameComplete) {
+    const percentage = (score / (questions.length * 10)) * 100;
+    const isPerfect = percentage === 100;
+    let message = "";
+    if (isPerfect) message = "🎉 PERFECT SCORE! You're a MASTER! 🎉";
+    else if (percentage >= 90) message = "Outstanding! You're a master!";
+    else if (percentage >= 70) message = "Great job! You've got it!";
+    else if (percentage >= 50) message = "Good effort! Review and try again!";
+    else message = "Keep studying! You'll get there!";
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4 flex items-center justify-center">
+        {showCelebration && (
+          <>
+            <Confetti />
+            <Balloons />
+          </>
+        )}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center relative z-10">
+          {isPerfect ? (
+            <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-4 animate-bounce" />
+          ) : (
+            <Award className="w-24 h-24 text-yellow-500 mx-auto mb-4" />
+          )}
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Game Complete!</h2>
+          <div className="text-6xl font-bold text-purple-600 mb-2">{score}</div>
+          <div className="text-xl text-gray-600 mb-6">{message}</div>
+          <div className="bg-gray-100 rounded-lg p-4 mb-6">
+            <p className="text-gray-700">You got {Math.round(percentage)}% correct!</p>
+            <p className="text-sm text-gray-600 mt-2">Total Questions: {questions.length}</p>
+            {isPerfect && (
+              <p className="text-lg font-bold text-green-600 mt-3">🏆 PERFECT SCORE! 🏆</p>
+            )}
+          </div>
+          <button
+            onClick={resetGame}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center mx-auto gap-2"
+          >
+            <RotateCcw className="w-5 h-5" />
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
+      {showMiniCelebration && (
+        <>
+          <MiniConfetti />
+          <MiniBalloons />
+        </>
+      )}
+      {showSadFace && (
+        <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+          <div className="animate-sad-bounce">
+            <div className="text-9xl">😢</div>
+          </div>
+          <style jsx>{`
+            @keyframes sad-bounce {
+              0%, 100% { transform: scale(1) translateY(0); opacity: 0; }
+              10% { transform: scale(1.2) translateY(-20px); opacity: 1; }
+              20% { transform: scale(1) translateY(0); opacity: 1; }
+              90% { transform: scale(1) translateY(0); opacity: 1; }
+            }
+            .animate-sad-bounce {
+              animation: sad-bounce 2s ease-out forwards;
+            }
+          `}</style>
+        </div>
+      )}
+      <div className="max-w-2xl mx-auto pt-8">
+        {/* Header */}
+        <div className="bg-white rounded-t-2xl shadow-lg p-6">
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+            Sensor vs Transducer Challenge
+          </h1>
+          <div className="flex justify-between items-center mt-4">
+            <div className="bg-blue-100 px-4 py-2 rounded-lg">
+              <span className="text-sm text-gray-600">Score: </span>
+              <span className="text-xl font-bold text-blue-600">{score}</span>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(questions[currentQuestion].difficulty)}`}>
+              {questions[currentQuestion].difficulty}
+            </div>
+            <div className="bg-purple-100 px-4 py-2 rounded-lg">
+              <span className="text-sm text-gray-600">Question: </span>
+              <span className="text-xl font-bold text-purple-600">
+                {currentQuestion + 1}/{questions.length}
+              </span>
+            </div>
+          </div>
+          {streak > 1 && (
+            <div className="mt-3 bg-yellow-100 border-2 border-yellow-400 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
+              <Zap className="w-5 h-5 text-yellow-600" />
+              <span className="text-yellow-800 font-semibold">
+                {streak} Streak! +{streak * 5} bonus points!
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-white shadow-lg p-8 mb-4">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              {questions[currentQuestion].device}
+            </h2>
+            <p className="text-gray-700 text-lg mb-3 text-center">
+              {questions[currentQuestion].description}
+            </p>
+            <div className="bg-white rounded-lg p-4 mt-4">
+              <p className="text-sm text-gray-600 font-semibold mb-1">Energy/Force Flow:</p>
+              <p className="text-purple-700 font-mono text-center">
+                {questions[currentQuestion].converts}
+              </p>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+            Is this a Sensor or Transducer?
+          </h3>
+
+          {!showFeedback ? (
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleAnswer('sensor')}
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white py-6 rounded-xl font-bold text-xl hover:shadow-xl transform hover:scale-105 transition-all"
+              >
+                SENSOR
+              </button>
+              <button
+                onClick={() => handleAnswer('transducer')}
+                className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-6 rounded-xl font-bold text-xl hover:shadow-xl transform hover:scale-105 transition-all"
+              >
+                TRANSDUCER
+              </button>
+            </div>
+          ) : (
+            <div className={`p-6 rounded-xl ${isCorrect ? 'bg-green-100 border-4 border-green-500' : 'bg-red-100 border-4 border-red-500'}`}>
+              <div className="flex items-center justify-center mb-4">
+                {isCorrect ? (
+                  <CheckCircle className="w-16 h-16 text-green-600" />
+                ) : (
+                  <XCircle className="w-16 h-16 text-red-600" />
+                )}
+              </div>
+              <h3 className={`text-2xl font-bold text-center mb-3 ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                {isCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p className="text-gray-800 text-center text-lg leading-relaxed">
+                {questions[currentQuestion].explanation}
+              </p>
+              {isCorrect && streak > 0 && (
+                <p className="text-green-700 font-semibold text-center mt-3">
+                  +{10 + (streak * 5)} points!
+                </p>
+              )}
+              <button
+                onClick={handleContinue}
+                className="mt-6 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              >
+                {currentQuestion < questions.length - 1 ? 'Continue to Next Question →' : 'See Final Results →'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Helper Card */}
+        <div className="bg-white rounded-b-2xl shadow-lg p-6">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <h4 className="font-bold text-blue-900 mb-2">Remember:</h4>
+            <p className="text-sm text-gray-700 mb-2">
+              <span className="font-semibold text-green-700">SENSOR:</span> Detects/senses a physical phenomenon (stays in same energy domain)
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-orange-700">TRANSDUCER:</span> Converts one form of energy to another (usually to electrical)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SensorTransducerGame;
